@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "newromancer-tools"
+version = "0.0.1"
+description = "Resource extraction and preservation tools for the Amiga version of Neuromancer"
+readme = "docs/extractor.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "amitools>=0.8.1,<0.9",
+    "colorama>=0.4.6,<0.5",
+    "pypng>=0.20220715.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24",
+    "ruff>=0.16.8",
+]
+
+[project.scripts]
+newromancer-extract = "extract:main"
+
+[tool.setuptools]
+package-dir = {"" = "scripts"}
+py-modules = ["extract"]
+
+[tool.setuptools.packages.find]
+where = ["scripts"]
+include = ["newromancerlib*"]
+namespaces = false
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]

@@ -1,11 +1,10 @@
 build*/
 work/
 /target/
+assets/
 
 .DS_Store
 .cache
-ghidra/*.lock
-ghidra/*.lock~
 
 __pycache__
 .venv/
