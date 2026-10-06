@@ -13,6 +13,8 @@ namespace {
 
 using Entries = std::expected<std::vector<std::span<const std::uint8_t>>, DecodeError>;
 
+}  // namespace
+
 TEST(OffsetTableTest, EntriesRunToTheNextOffsetAndTheEnd) {
   constexpr std::array<std::uint8_t, 16> kData{0, 0, 0, 12, 0, 0, 0, 14, 0, 0, 0, 0, 'a', 'b', 'c', 'd'};
   const Entries entries = ReadEntries(kData);
@@ -43,5 +45,4 @@ TEST(OffsetTableTest, RejectsOffsetsOutsideTheData) {
   EXPECT_EQ(past_end.error(), DecodeError::OffsetOutOfRange);
 }
 
-}  // namespace
 }  // namespace newromancer::host

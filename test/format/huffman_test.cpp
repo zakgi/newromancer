@@ -80,6 +80,8 @@ std::vector<std::uint8_t> EncodeStream(std::span<const std::uint8_t> data, std::
   return Stream(budget ? *budget : static_cast<std::uint32_t>(data.size()), writer);
 }
 
+}  // namespace
+
 TEST(HuffmanTest, SuccessiveDecodesContinueTheStream) {
   std::vector<std::uint8_t> data(256);
   for (std::size_t index = 0; index < data.size(); ++index) {
@@ -173,5 +175,4 @@ TEST(HuffmanTest, DecodesEveryPictureStreamOfTheOriginalDisk) {
   EXPECT_EQ(test::Sha256Hex(decoded), "624f6123087ff58b8e15c602afa4c4048cdf4ce7cf12fbd262a0058564d948f2");
 }
 
-}  // namespace
 }  // namespace newromancer::host

@@ -79,7 +79,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 # Host-side reading of the disk image and decoding of the original files (std allowed).
-add_library(newromancer_host STATIC src/host/adf.cpp src/host/format/huffman.cpp src/host/format/offset_table.cpp)
+add_library(newromancer_host STATIC src/host/adf.cpp src/host/format/huffman.cpp src/host/format/offset_table.cpp
+                                    src/host/format/picture.cpp)
 target_include_directories(newromancer_host PUBLIC ${COMMON_SOURCE_DIR})
 target_link_libraries(newromancer_host PUBLIC spdlog::spdlog adf)
 
@@ -112,7 +113,7 @@ if(NEWROMANCER_BUILD_TESTS)
   include(GoogleTest)
 
   add_executable(newromancer_tests test/format/huffman_test.cpp test/format/offset_table_test.cpp
-                                   test/host/adf_test.cpp)
+                                   test/format/picture_test.cpp test/host/adf_test.cpp)
   target_include_directories(newromancer_tests PRIVATE ${CMAKE_CURRENT_LIST_DIR}/test)
   target_compile_definitions(newromancer_tests PRIVATE NEWROMANCER_ADF="${NEWROMANCER_ADF}")
   target_link_libraries(newromancer_tests PRIVATE newromancer_host GTest::gtest_main)
