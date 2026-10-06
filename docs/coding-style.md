@@ -28,6 +28,7 @@ This document is self-contained. Update it when an agreed convention changes.
 | Item | Convention | Example |
 | --- | --- | --- |
 | Types and member/free functions | `PascalCase` | `ArchiveEntry`, `ReadEntry` |
+| Enumerators | `PascalCase`, no prefix | `ItemId::Mimic`, `DecodeError::TruncatedTable` |
 | Variables, parameters, fields, files, namespaces | `snake_case` | `file_offset`, `archive_reader.cpp` |
 | Compile-time constants | `kCamelCase` | `kArchiveEntrySize` |
 | Preprocessor macros | `UPPER_SNAKE_CASE` | Use only when required |
@@ -42,7 +43,9 @@ hunk offsets, and runtime addresses.
 
 Name synchronous operations with direct verbs such as `Load`, `Decode`,
 `Advance`, or `Render`. Reserve `On...` for actual callbacks; framework-defined
-callback names retain their required spelling.
+callback names retain their required spelling. Do not use `...At` or `...Of`
+suffixes such as `TagAt` or `PictureOf`; name the function by what it does. A
+kernel's method is `Calculate`, not `Evaluate`.
 
 Parameter names appear in declarations and match their definitions. Mark
 unused parameters `[[maybe_unused]]`; do not replace their names with comments.
@@ -72,6 +75,9 @@ Do not use a null pointer merely as a substitute for an optional result.
   of views and references.
 - Accept spans or suitably constrained ranges where an operation should
   work with different contiguous containers.
+- Compute a whole slice with bulk operations, such as `std::ranges::copy` of
+  subspans or `std::ranges::fill`, rather than a per-element helper that
+  redoes the index arithmetic on every call.
 - Use RAII for resources. Avoid manual `new`/`delete`, `malloc`/`free`, C-style
   casts, C string manipulation, and macros standing in for typed operations.
 
@@ -83,10 +89,18 @@ outlive its backing storage.
 
 - Use fixed-width integer types for file fields, registers, and arithmetic
   whose width affects behavior. Use `std::size_t` for host buffer sizes.
-- Use `enum class` with an explicit underlying type.
+- Core code uses `float`, never `double`: the target FPU is single precision.
+  `double` is acceptable in host code, tools and tests.
+- Use `enum class` with an explicit underlying type. Group related constants
+  in an `enum class` rather than scattering them as free constants.
 - Prefer braced initialization and initialize state deliberately.
 - Prefer `constexpr` and `consteval` for tables and compile-time work.
-  Tables should not require dynamic initialization or allocation at startup.
+  Tables should not require dynamic initialization or allocation at startup;
+  a container whose constructor allocates, such as `std::flat_map`, is not a
+  table. `constexpr std::ranges::sort` is available to `consteval` builders.
+- Every `constexpr` table carries `static_assert`s for its invariants: its
+  size matches the enumeration that indexes it, its entries are in range, and
+  any ordering a lookup relies on holds.
 - Decode file bytes into typed records once, in the host loader, which owns
   the layout knowledge: offsets, field widths, parallel arrays. Present the
   result the way a modern engine consumes it, as arrays of structs, spans and
@@ -136,7 +150,15 @@ non-throwing behavior is required.
 Keep state, configuration, and resources inside the objects that own them.
 Pass dependencies explicitly. Avoid ambient globals, file-static singletons,
 and static class state. Per-template `static constexpr` constants are an
-exception when they serve a compile-time purpose.
+exception when they serve a compile-time purpose; every other data member is
+a non-static member of the instance, and an instance that lives for the
+program's lifetime is declared `inline constinit` at namespace scope.
+
+Behavior lives as methods on the class that owns the state, not as free
+functions over a plain state struct. A header hides nothing in a `detail`,
+`impl` or `internal` namespace: private members or an anonymous namespace in
+the `.cpp` serve that purpose. Do not forward-declare types; include the
+header that defines them.
 
 Use `const` honestly. Do not use `mutable` to hide state changes in a query.
 Discuss a necessary memoization exception before introducing it.
@@ -295,12 +317,22 @@ investigation history and design decisions in Markdown. Labels and addresses
 from analysis tools stay out of the repository. The documents link code and
 extractor where they describe the same resource or algorithm.
 
+Comments document the code, not its provenance. A ported file carries its
+SPDX tag and copyright line and does not say where it came from; provenance
+belongs in the commit message. Comments name no local paths, sibling projects
+or other repositories. They describe no fixed bug, replaced approach or
+history of the current shape: a rationale is stated as a present-tense
+property, never as a contrast with a former state.
+
 ## Working on changes
 
 Discuss architecture before implementation and ask for permission before
 writing or modifying code. A specific user instruction to implement a change
 authorizes that change; keep the edit within that scope. Make small, reviewable
-changes and update the relevant documentation alongside them.
+changes and update the relevant documentation alongside them. Introduce no
+dependency without raising it first, and no type, file, wrapper, indirection
+or parameter the agreed change did not name: a gap in the specification
+yields a question, not a design.
 
 Validate changes against the original assets and behavior. Use focused tests
 for meaningful cases such as decompression boundaries, malformed inputs,
